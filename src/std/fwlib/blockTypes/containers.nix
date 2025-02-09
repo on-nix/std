@@ -63,6 +63,17 @@ in
       (mkCommand currentSystem "publish" "copy the image to its remote registry" [skopeo-nix2container] ''
           ${copyFn}
           copy docker://${target.image.repo}
+
+          # Get the digest of the published image
+          DIGEST=$(skopeo inspect --raw docker://${target.image.repo}:${builtins.head target.image.tags} | jq -r '.config.digest')
+
+          echo "$DIGEST"
+          echo "$GITHUB_OUTPUT"
+
+          # Conditionally output the name and digest for GitHub Actions
+          if [ -n "$GITHUB_OUTPUT" ]; then
+            echo 'out={"name": "${target.image.repo}", "digest": "'"$DIGEST"'"}' >> "$GITHUB_OUTPUT"
+          fi
         '' {
           meta.image = target.image.name;
           inherit proviso;
