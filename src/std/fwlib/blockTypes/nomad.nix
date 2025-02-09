@@ -47,6 +47,7 @@ in
         declare job_path="$PRJ_DATA_HOME/${job_path}"
         render() {
           echo "Rendering to $job_path..."
+          mkdir -p "$PRJ_DATA_HOME/${dirOf fragmentRelPath}"
           rm -rf "$job_path"
           ln -s "${jobWithGitRevision target}" "$job_path"
           if status=$(nomad validate "$job_path"); then
@@ -69,7 +70,7 @@ in
         render
         if ! plan_results=$(nomad plan -force-color "$job_path"); then
           echo "$plan_results"
-          run() { echo "$plan_results" | grep 'nomad job run -check-index'; }
+          run() { eval "$(echo "$plan_results" | grep 'nomad job run -check-index')"; }
           ${askUserToProceedSnippet "deploy" "run"}
         else
           echo "Job hasn't changed since last deployment, nothing to deploy"
